@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      # ===== 라우팅 규칙 =====
+      routes:
+        # 블로그 서비스 라우팅: 게시글/카테고리 관련 요청 → blog-service(8081)
+        - id: blog-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/posts/**,/api/categories/**
+
+        # 인증 서비스 라우팅: 로그인/회원가입 관련 요청 → auth-service(8082)
+        - id: auth-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/auth/**
+
+      # ===== 전역 CORS 설정 =====
+      # 프론트엔드(3000) → 게이트웨이(8080) 교차 출처 요청 허용
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+server:
+  port: 8080
+
+# JWT 서명 키 (운영 환경에서는 반드시 환경변수로 주입)
+jwt:
+  secret: ${JWT_SECRET:playground-dev-secret-key-must-be-at-least-256-bits-long}

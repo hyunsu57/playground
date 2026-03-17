@@ -1,0 +1,39 @@
+// 인증 서비스: 회원가입/로그인/JWT 토큰 발급 및 갱신 전담
+// Spring Web MVC + Spring Security + JPA + jjwt 구성
+
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    // Spring Web MVC: REST API 제공
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Security: 비밀번호 BCrypt 암호화, 인증 처리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Spring Data JPA: 사용자 정보 영속성 관리
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring Validation: 회원가입/로그인 요청 데이터 검증 (@Valid)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // jjwt 0.12.x: JWT 액세스/리프레시 토큰 생성 및 검증
+    // jjwt-api: 인터페이스 (컴파일 타임), jjwt-impl/jackson: 구현체 (런타임)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // H2: 개발용 인메모리 DB (dev 프로파일)
+    runtimeOnly 'com.h2database:h2'
+
+    // PostgreSQL: Render.com 운영 DB (prod 프로파일)
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // 개발 중 자동 재시작 지원
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 테스트
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}

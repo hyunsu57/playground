@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: blog-service
+  # 기본 활성 프로파일: 개발 환경(H2 인메모리 DB)
+  profiles:
+    active: dev
+
+server:
+  port: 8081
+
+# JWT 서명 키 (게이트웨이와 동일한 값 사용)
+jwt:
+  secret: ${JWT_SECRET:playground-dev-secret-key-must-be-at-least-256-bits-long}
+
+---
+# ===== dev 프로파일: 로컬 개발 환경 =====
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:blogdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  # H2 웹 콘솔 설정 (개발 중 DB 직접 조회용: http://localhost:8081/h2-console)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 앱 시작 시 테이블 생성, 종료 시 삭제
+    show-sql: true           # SQL 쿼리 콘솔 출력
+    properties:
+      hibernate:
+        format_sql: true     # SQL 들여쓰기 포맷
+
+---
+# ===== prod 프로파일: Render.com 운영 환경 =====
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    # Render.com PostgreSQL 연결 문자열 (환경변수로 주입)
+    url: ${DATABASE_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 운영에서는 스키마 검증만 (변경 금지)
+    show-sql: false

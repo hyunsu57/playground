@@ -1,0 +1,38 @@
+// 블로그 서비스: 게시글(Post) CRUD 핵심 비즈니스 로직 담당
+// Spring Web MVC + JPA + H2(개발)/PostgreSQL(운영) 구성
+
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    // Spring Web MVC: 동기식 REST API (블로그 콘텐츠 처리에 적합)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Data JPA: 게시글/카테고리 ORM 처리
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring Validation: @Valid, @NotBlank 등 요청 데이터 검증
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Spring Security: 게이트웨이에서 전달받은 JWT 2차 검증
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // jjwt 0.12.x: JWT 토큰 파싱 및 검증
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // H2: 개발/테스트용 인메모리 DB (dev 프로파일)
+    runtimeOnly 'com.h2database:h2'
+
+    // PostgreSQL: Render.com 운영 DB 드라이버 (prod 프로파일)
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // 개발 중 자동 재시작 지원
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 테스트
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}

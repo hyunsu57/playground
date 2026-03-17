@@ -1,0 +1,110 @@
+# 로컬 개발 환경 전체 서비스 오케스트레이션
+# 사용법: docker-compose up -d
+# Render.com에서는 각 서비스를 Web Service로 개별 배포
+
+services:
+
+  # ===== 데이터베이스 =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: playground-postgres
+    environment:
+      POSTGRES_DB: playgrounddb
+      POSTGRES_USER: playground
+      POSTGRES_PASSWORD: playground123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - playground-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playground -d playgrounddb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== 백엔드 서비스 =====
+
+  # Auth Service: 인증/인가 서비스 (포트 8082)
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://postgres:5432/playgrounddb
+      DB_USERNAME: playground
+      DB_PASSWORD: playground123
+      # 운영 환경에서는 반드시 강력한 비밀 키로 교체
+      JWT_SECRET: ${JWT_SECRET:-playground-docker-secret-key-must-be-256bits-or-longer}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - playground-net
+
+  # Blog Service: 게시글 CRUD 서비스 (포트 8081)
+  blog-service:
+    build:
+      context: .
+      dockerfile: blog-service/Dockerfile
+    container_name: blog-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://postgres:5432/playgrounddb
+      DB_USERNAME: playground
+      DB_PASSWORD: playground123
+      JWT_SECRET: ${JWT_SECRET:-playground-docker-secret-key-must-be-256bits-or-longer}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - playground-net
+
+  # Gateway Service: API 게이트웨이 (포트 8080, 단일 진입점)
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-playground-docker-secret-key-must-be-256bits-or-longer}
+      # 도커 네트워크 내부 서비스 URL로 라우팅 (컨테이너명으로 DNS 해석)
+      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://blog-service:8081
+      SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://auth-service:8082
+    depends_on:
+      - blog-service
+      - auth-service
+    networks:
+      - playground-net
+
+  # ===== 프론트엔드 =====
+  # Vite 빌드 결과물을 nginx로 서빙 (포트 3000)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: playground-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway-service
+    networks:
+      - playground-net
+
+# 영속 데이터 볼륨
+volumes:
+  postgres-data:
+
+# 서비스 간 통신을 위한 내부 네트워크
+networks:
+  playground-net:
+    driver: bridge

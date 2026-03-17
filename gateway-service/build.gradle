@@ -1,0 +1,26 @@
+// API Gateway 서비스: 모든 클라이언트 요청의 단일 진입점
+// Spring Cloud Gateway(WebFlux 기반) + JWT 토큰 1차 검증
+// 주의: Gateway는 WebFlux 기반이므로 WebMVC와 함께 사용 불가
+
+plugins {
+    // 실행 가능한 JAR 생성을 위해 Spring Boot 플러그인 활성화
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    // Spring Cloud Gateway (WebFlux 기반 라우팅 엔진)
+    // 클라이언트 요청을 blog-service(8081), auth-service(8082)로 라우팅
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
+
+    // jjwt 0.12.x: 게이트웨이에서 JWT 1차 검증 (Auth Service 호출 없이 빠른 인증 처리)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // Reactor 테스트 지원 (WebFlux 기반이므로 StepVerifier 사용)
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // 개발 중 자동 재시작 지원
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}

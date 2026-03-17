@@ -1,0 +1,11 @@
+// Gradle 멀티 모듈 프로젝트 루트 설정
+// 여기에 등록된 모듈만 Gradle이 인식하고 빌드함
+rootProject.name = 'playGround'
+
+// 백엔드 서비스 모듈 등록
+include 'gateway-service'
+include 'blog-service'
+include 'auth-service'
+
+// 프론트엔드(frontend/)는 Java 모듈이 아니므로 include에서 제외
+// npm 빌드 후 독립 Node 서버로 운영 (docker-compose에서 관리)

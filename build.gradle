@@ -1,0 +1,60 @@
+// 루트 프로젝트: 모든 서브 모듈의 공통 설정을 관리하는 Parent 역할
+// 각 서비스 모듈(gateway, blog, auth)에 공통 적용되는 플러그인과 의존성을 정의
+// 루트 자체는 실행 가능한 JAR를 생성하지 않음
+
+plugins {
+    // apply false: 루트에는 적용하지 않고 버전만 중앙 관리
+    // 각 서브모듈에서 apply plugin으로 개별 활성화
+    id 'org.springframework.boot' version '4.0.3' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'java' apply false
+}
+
+// 그룹/버전은 모든 서브모듈이 상속
+group = 'com.springjpatest'
+version = '0.0.1-SNAPSHOT'
+
+// 모든 서브모듈(gateway-service, blog-service, auth-service)에 공통 적용
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    // Java 21 LTS 사용 (Spring Boot 4.x 최소 요구사항)
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    // Spring Cloud BOM: 버전 호환성 자동 관리
+    ext {
+        set('springCloudVersion', "2025.1.0")
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    // 모든 서브모듈 공통 의존성
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
