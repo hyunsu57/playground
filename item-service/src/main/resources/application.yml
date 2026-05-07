@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: item-service
+  # 기본 활성 프로파일: 개발 환경(H2 인메모리 DB)
+  profiles:
+    active: dev
+
+server:
+  port: 8084
+
+---
+# ===== dev 프로파일: 로컬 개발 환경 =====
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:itemdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  # H2 웹 콘솔 설정 (개발 중 DB 직접 조회용: http://localhost:8083/h2-console)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  # data.sql이 Hibernate DDL(create-drop) 이후에 실행되도록 지연
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-drop  # 앱 시작 시 테이블 생성, 종료 시 삭제
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  # Caffeine 캐시 설정: 목록 캐시는 최대 200개 항목, 10분 만료
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=200,expireAfterWrite=600s
+
+---
+# ===== prod 프로파일: 운영 환경 =====
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=300s

@@ -1,49 +1,107 @@
-import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { getPost } from '@/api/postApi.js'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import ReactMarkdown from 'react-markdown'
+import { getPost, deletePost } from '@/api/postApi.js'
+import { useAuthContext } from '@/context/AuthContext.jsx'
 
 /**
- * 게시글 상세 페이지 컴포넌트.
- *
- * URL 파라미터에서 게시글 ID를 추출하여 상세 내용을 표시한다.
- * 본문은 마크다운 형식이므로 추후 마크다운 렌더러를 추가할 예정이다.
+ * 게시글 상세 페이지.
+ * 마크다운 형식의 본문을 ReactMarkdown으로 렌더링한다.
+ * 작성자 본인인 경우 수정/삭제 버튼을 표시한다.
  */
 const PostDetailPage = () => {
-  // URL 파라미터에서 게시글 ID 추출 (/posts/:id)
   const { id } = useParams()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { userEmail } = useAuthContext()
 
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ['post', id],
     queryFn: () => getPost(id),
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deletePost(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      navigate('/')
+    },
+  })
+
+  const handleDelete = () => {
+    if (window.confirm('정말로 삭제하시겠습니까?')) {
+      deleteMutation.mutate()
+    }
+  }
+
   if (isLoading) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    )
   }
 
   if (isError) {
-    return <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>게시글을 찾을 수 없습니다.</div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="text-red-500">게시글을 찾을 수 없습니다.</div>
+      </div>
+    )
   }
 
+  const isAuthor = userEmail && post.authorEmail === userEmail
+
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-      {/* 뒤로가기 링크 */}
-      <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
-        ← 목록으로
-      </Link>
+    <div>
+      {/* 상단 내비게이션 */}
+      <div className="flex items-center justify-between mb-6">
+        <Link to="/" className="text-sm text-indigo-600 hover:underline no-underline">
+          ← 목록으로
+        </Link>
+
+        {isAuthor && (
+          <div className="flex gap-2">
+            <Link
+              to={`/posts/${id}/edit`}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-100 transition-colors no-underline text-gray-700"
+            >
+              수정
+            </Link>
+            <button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* 게시글 헤더 */}
-      <header style={{ marginBottom: '2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
-        <h1>{post.title}</h1>
-        <p style={{ color: '#666', fontSize: '0.9rem' }}>
-          작성자: {post.authorEmail} &nbsp;|&nbsp;
-          작성일: {new Date(post.createdAt).toLocaleDateString('ko-KR')}
-        </p>
+      <header className="mb-8 pb-6 border-b border-gray-200">
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">{post.title}</h1>
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <span>{post.authorEmail}</span>
+          <span>·</span>
+          <time dateTime={post.createdAt}>
+            {new Date(post.createdAt).toLocaleDateString('ko-KR', {
+              year: 'numeric', month: 'long', day: 'numeric',
+            })}
+          </time>
+          {post.updatedAt !== post.createdAt && (
+            <>
+              <span>·</span>
+              <span>수정됨</span>
+            </>
+          )}
+        </div>
       </header>
 
-      {/* 게시글 본문 (추후 마크다운 렌더러 적용 예정) */}
-      <article style={{ lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
-        {post.content}
+      {/* 게시글 본문 (마크다운 렌더링) */}
+      <article className="prose">
+        <ReactMarkdown>{post.content}</ReactMarkdown>
       </article>
     </div>
   )

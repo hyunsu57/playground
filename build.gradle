@@ -5,9 +5,9 @@
 plugins {
     // apply false: 루트에는 적용하지 않고 버전만 중앙 관리
     // 각 서브모듈에서 apply plugin으로 개별 활성화
-    id 'org.springframework.boot' version '4.0.3' apply false
+    id 'org.springframework.boot' version '3.5.3' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
-    id 'java' apply false
+    id 'java'
 }
 
 // 그룹/버전은 모든 서브모듈이 상속

@@ -1,0 +1,24 @@
+// 웹소켓 서비스: STOMP 프로토콜 기반 실시간 채팅 기능 담당
+// Spring WebSocket + STOMP + In-Memory Broker 구성
+
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    // Spring Web MVC: REST API (채팅방 목록 조회 등)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring WebSocket: STOMP 프로토콜 실시간 통신
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Spring Security: STOMP 엔드포인트 접근 제어
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // 개발 중 자동 재시작 지원
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 테스트
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}

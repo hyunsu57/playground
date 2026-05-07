@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: multiThread-service
+
+  # Spring Boot 3.2+: 내장 Tomcat과 @Async 작업을 모두 가상 스레드로 실행
+  # 이 한 줄로 서버 전체가 가상 스레드 기반으로 동작함
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8086
+
+# Actuator: 스레드 덤프 및 정보 엔드포인트 노출
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, threaddump, metrics
+  endpoint:
+    threaddump:
+      enabled: true
+
+logging:
+  level:
+    com.springjpatest.multithreadservice: DEBUG

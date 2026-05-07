@@ -1,72 +1,90 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { getPosts } from '@/api/postApi.js'
 import PostCard from '@/components/PostCard.jsx'
 
 /**
- * 홈 페이지 컴포넌트.
- *
- * 공개된 게시글 목록을 페이지네이션으로 보여준다.
- * React Query의 useQuery로 서버 상태를 캐싱하여 불필요한 재요청을 방지한다.
+ * 블로그 홈 페이지.
+ * 공개 게시글 목록을 페이지네이션으로 표시한다.
  */
 const HomePage = () => {
-  // 현재 페이지 번호 (0부터 시작)
   const [currentPage, setCurrentPage] = useState(0)
 
-  // 게시글 목록 조회 (React Query - 캐싱, 로딩 상태 자동 관리)
   const { data, isLoading, isError } = useQuery({
     queryKey: ['posts', currentPage],
     queryFn: () => getPosts(currentPage, 10),
   })
 
   if (isLoading) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    )
   }
 
   if (isError) {
-    return <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>게시글을 불러오는데 실패했습니다.</div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="text-red-500">게시글을 불러오는데 실패했습니다.</div>
+      </div>
+    )
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-      {/* 헤더 영역 */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>기술 블로그</h1>
-        <nav>
-          <Link to="/login" style={{ marginRight: '1rem' }}>로그인</Link>
-          <Link to="/signup">회원가입</Link>
-        </nav>
-      </header>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">기술 블로그</h1>
+        <span className="text-sm text-gray-500">
+          총 {data?.totalElements ?? 0}개
+        </span>
+      </div>
 
-      {/* 게시글 목록 */}
-      <main>
-        {data?.content?.length === 0 ? (
-          <p>아직 작성된 게시글이 없습니다.</p>
-        ) : (
-          data?.content?.map((post) => (
+      {data?.content?.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          아직 작성된 게시글이 없습니다.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {data?.content?.map((post) => (
             <PostCard key={post.id} post={post} />
-          ))
-        )}
-      </main>
+          ))}
+        </div>
+      )}
 
       {/* 페이지네이션 */}
       {data?.totalPages > 1 && (
-        <footer style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+        <div className="flex justify-center gap-1 mt-8">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+            disabled={currentPage === 0}
+            className="px-3 py-1.5 text-sm rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            이전
+          </button>
+
           {Array.from({ length: data.totalPages }, (_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i)}
-              style={{
-                padding: '0.5rem 1rem',
-                fontWeight: currentPage === i ? 'bold' : 'normal',
-                cursor: 'pointer',
-              }}
+              className={`px-3 py-1.5 text-sm rounded border transition-colors cursor-pointer ${
+                currentPage === i
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'border-gray-300 hover:bg-gray-100'
+              }`}
             >
               {i + 1}
             </button>
           ))}
-        </footer>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(data.totalPages - 1, p + 1))}
+            disabled={currentPage === data.totalPages - 1}
+            className="px-3 py-1.5 text-sm rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            다음
+          </button>
+        </div>
       )}
     </div>
   )

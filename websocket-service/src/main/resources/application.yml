@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: websocket-service
+
+server:
+  port: 8085
+
+# 로깅: WebSocket/STOMP 디버깅 시 활성화
+logging:
+  level:
+    org.springframework.web.socket: INFO
+    org.springframework.messaging: INFO

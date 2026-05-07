@@ -1,0 +1,38 @@
+// Java 21 멀티스레드 기능 데모 서비스
+// Virtual Threads (JEP 444 - 정식), Structured Concurrency (JEP 453 - 프리뷰), Scoped Values (JEP 446 - 프리뷰)
+
+plugins {
+    id 'org.springframework.boot'
+}
+
+// Structured Concurrency, Scoped Values는 Java 21 프리뷰 기능이므로 --enable-preview 필요
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['--enable-preview']
+    options.release = 21
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs('--enable-preview')
+}
+
+bootRun {
+    jvmArgs('--enable-preview')
+}
+
+bootJar {
+    // 실행 JAR에도 --enable-preview 적용
+    manifest {
+        attributes 'Implementation-Title': 'multiThread-service'
+    }
+}
+
+dependencies {
+    // Spring Web MVC: REST API
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Actuator: 스레드 정보 엔드포인트 (/actuator/threads)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // 테스트
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
